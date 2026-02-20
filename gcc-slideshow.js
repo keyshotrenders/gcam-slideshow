@@ -31,70 +31,159 @@ var cur=0,mIdx=0,mMode='sbs',mOpen=false,isDragging=false;
 function $(s,c){return(c||document).querySelector(s);}
 function $$(s,c){return(c||document).querySelectorAll(s);}
 
-/* MAIN SLIDESHOW */
+/* ═══════════════════════════════════════════════
+   BUILD MAIN SLIDESHOW (NO ads)
+   ═══════════════════════════════════════════════ */
 function buildMain(){
   var root=$('#gccRoot');
+  if(!root) return;
   var h='';
+
   h+='<div class="gcc-hdr">';
   h+='<span class="gcc-badge">📱 Camera Comparison</span>';
   h+='<h2 class="gcc-title">Stock Camera vs GCam — Real Shots</h2>';
   h+='<p class="gcc-desc">56 side-by-side comparisons. Click any image for a detailed interactive view with drag-to-compare.</p>';
-  h+='</div><div class="gcc-show" id="gccShow"><div class="gcc-vp" id="gccVp">';
+  h+='</div>';
+
+  h+='<div class="gcc-show" id="gccShow">';
+  h+='<div class="gcc-vp" id="gccVp">';
 
   for(var i=0;i<TOTAL;i++){
     var n=i+1,isEarly=i<3;
-    h+='<div class="gcc-slide'+(i===0?' active':'')+'" data-i="'+i+'"><div class="gcc-sbs"><div class="gcc-pnl">';
+    h+='<div class="gcc-slide'+(i===0?' active':'')+'" data-i="'+i+'">';
+    h+='<div class="gcc-sbs">';
+    h+='<div class="gcc-pnl">';
     h+='<img src="'+(isEarly?sImg(n,600):PH)+'"'+(isEarly?'':' data-src="'+sImg(n,600)+'"')+' alt="Stock Camera Sample '+n+'">';
-    h+='<span class="gcc-tag gcc-tag-s">📷 Stock</span></div><div class="gcc-pnl">';
+    h+='<span class="gcc-tag gcc-tag-s">📷 Stock</span>';
+    h+='</div>';
+    h+='<div class="gcc-pnl">';
     h+='<img src="'+(isEarly?gImg(n,600):PH)+'"'+(isEarly?'':' data-src="'+gImg(n,600)+'"')+' alt="GCam Sample '+n+'">';
-    h+='<span class="gcc-tag gcc-tag-g">📸 GCam</span></div></div>';
-    h+='<div class="gcc-cap">'+scenes[i]+' — Sample '+n+' of '+TOTAL+'</div></div>';
+    h+='<span class="gcc-tag gcc-tag-g">📸 GCam</span>';
+    h+='</div>';
+    h+='</div>';
+    h+='<div class="gcc-cap">'+scenes[i]+' — Sample '+n+' of '+TOTAL+'</div>';
+    h+='</div>';
   }
 
-  h+='<div class="gcc-hover"><div class="gcc-hover-icon">'+SVG_EXPAND+'</div><span>Click for detailed comparison</span></div></div>';
-  h+='<div class="gcc-hint" id="gccHint">'+SVG_SEARCH+'<span>Tap to explore in full-screen detail</span></div>';
-  h+='<div class="gcc-nav"><button class="gcc-btn" id="gccPrev" aria-label="Previous slide">&#9664;</button>';
+  h+='<div class="gcc-hover">';
+  h+='<div class="gcc-hover-icon">'+SVG_EXPAND+'</div>';
+  h+='<span>Click for detailed comparison</span>';
+  h+='</div>';
+
+  h+='</div>';
+
+  h+='<div class="gcc-hint" id="gccHint">';
+  h+=SVG_SEARCH;
+  h+='<span id="gccHintText">Tap to explore in full-screen detail</span>';
+  h+='</div>';
+
+  h+='<div class="gcc-nav">';
+  h+='<button class="gcc-btn" id="gccPrev" aria-label="Previous slide">&#9664;</button>';
   h+='<div class="gcc-prog" id="gccProgWrap"><div class="gcc-prog-bar" id="gccProg" style="width:'+(100/TOTAL).toFixed(2)+'%"></div></div>';
   h+='<span class="gcc-cnt" id="gccCnt">1 / '+TOTAL+'</span>';
-  h+='<button class="gcc-btn" id="gccNext" aria-label="Next slide">&#9654;</button></div></div>';
+  h+='<button class="gcc-btn" id="gccNext" aria-label="Next slide">&#9654;</button>';
+  h+='</div>';
+
+  h+='</div>';
+
   root.innerHTML=h;
 }
 
-/* MODAL */
+/* ═══════════════════════════════════════════════
+   BUILD MODAL (ads ONLY live here)
+   ═══════════════════════════════════════════════ */
 function buildModal(){
   var m=$('#gccModal');
-  var h='<div class="gcc-m-bg" id="gccMBg"></div><div class="gcc-m-wrap">';
-  h+='<div class="gcc-m-head"><div class="gcc-m-toggle" id="gccTog"><button class="active" data-mode="sbs">☷ Side by Side</button><button data-mode="drag">⇔ Drag Compare</button></div>';
-  h+='<div class="gcc-m-info"><span class="gcc-m-cnt" id="gccMCnt">1 / '+TOTAL+'</span><button class="gcc-m-close" id="gccMClose" aria-label="Close">✕</button></div></div>';
-  h+='<div class="gcc-m-body" id="gccMBody"><button class="gcc-m-arrow prev" id="gccMP" aria-label="Previous">&#9664;</button><div class="gcc-m-content" id="gccMC"></div><button class="gcc-m-arrow next" id="gccMN" aria-label="Next">&#9654;</button></div>';
-  h+='<div class="gcc-m-cap" id="gccMCap"></div><div class="gcc-m-foot">';
+  if(!m) {
+    m = document.createElement('div');
+    m.className = 'gcc-m';
+    m.id = 'gccModal';
+    document.body.appendChild(m);
+  }
+  var h='';
+  h+='<div class="gcc-m-bg" id="gccMBg"></div>';
+  h+='<div class="gcc-m-wrap">';
 
-  /* ADS */
-  h+='<div class="gcc-ad-desk"><div class="gcc-ad-lb"><div class="gcc-ad-slot"><span class="gcc-ad-lbl">Advertisement</span><div class="gcc-ad-ph">[ 728×90 Leaderboard — Paste ad code here ]</div></div></div></div>';
-  h+='<div class="gcc-ad-mob"><div class="gcc-ad-mb"><div class="gcc-ad-slot"><span class="gcc-ad-lbl">Advertisement</span><div class="gcc-ad-ph">[ 320×50 Mobile — Paste ad code here ]</div></div></div></div>';
+  /* Header */
+  h+='<div class="gcc-m-head">';
+  h+='<div class="gcc-m-toggle" id="gccTog">';
+  h+='<button class="active" data-mode="sbs">☷ Side by Side</button>';
+  h+='<button data-mode="drag">⇔ Drag Compare</button>';
+  h+='</div>';
+  h+='<div class="gcc-m-info">';
+  h+='<span class="gcc-m-cnt" id="gccMCnt">1 / '+TOTAL+'</span>';
+  h+='<button class="gcc-m-close" id="gccMClose" aria-label="Close">✕</button>';
   h+='</div></div>';
+
+  /* Body */
+  h+='<div class="gcc-m-body" id="gccMBody">';
+  h+='<button class="gcc-m-arrow prev" id="gccMP" aria-label="Previous">&#9664;</button>';
+  h+='<div class="gcc-m-content" id="gccMC"></div>';
+  h+='<button class="gcc-m-arrow next" id="gccMN" aria-label="Next">&#9654;</button>';
+  h+='</div>';
+
+  /* Caption */
+  h+='<div class="gcc-m-cap" id="gccMCap"></div>';
+
+  /* Footer — Ad slots */
+  h+='<div class="gcc-m-foot">';
+  h+='<div class="gcc-ad-desk">';
+  h+='<div class="gcc-ad-lb">';
+  h+='<div class="gcc-ad-slot">';
+  h+='<span class="gcc-ad-lbl">Advertisement</span>';
+  h+='<div class="gcc-ad-ph">[ 728×90 Leaderboard — Paste ad code here ]</div>';
+  h+='</div></div></div>';
+  h+='<div class="gcc-ad-mob">';
+  h+='<div class="gcc-ad-mb">';
+  h+='<div class="gcc-ad-slot">';
+  h+='<span class="gcc-ad-lbl">Advertisement</span>';
+  h+='<div class="gcc-ad-ph">[ 320×50 Mobile — Paste ad code here ]</div>';
+  h+='</div></div></div>';
+  h+='</div>';
+  h+='</div>';
+
   m.innerHTML=h;
-  if(!document.body.contains(m)) document.body.appendChild(m);
 }
 
+/* ═══════════════════════════════════════════════
+   RENDER MODAL CONTENT
+   ═══════════════════════════════════════════════ */
 function renderModal(){
   var n=mIdx+1;
   var mc=$('#gccMC');
   var s=sImg(n,1200),g=gImg(n,1200);
   var h='';
+
   if(mMode==='sbs'){
-    h+='<div class="gcc-m-sbs"><div class="gcc-m-sbs-pnl"><img src="'+s+'" alt="Stock '+n+'"><span class="gcc-tag gcc-tag-s">📷 Stock</span></div>';
-    h+='<div class="gcc-m-sbs-pnl"><img src="'+g+'" alt="GCam '+n+'"><span class="gcc-tag gcc-tag-g">📸 GCam</span></div></div>';
+    h+='<div class="gcc-m-sbs">';
+    h+='<div class="gcc-m-sbs-pnl">';
+    h+='<img src="'+s+'" alt="Stock '+n+'">';
+    h+='<span class="gcc-tag gcc-tag-s">📷 Stock</span>';
+    h+='</div>';
+    h+='<div class="gcc-m-sbs-pnl">';
+    h+='<img src="'+g+'" alt="GCam '+n+'">';
+    h+='<span class="gcc-tag gcc-tag-g">📸 GCam</span>';
+    h+='</div>';
+    h+='</div>';
   } else {
-    h+='<div class="gcc-m-drag" id="gccDrag"><div class="gcc-m-drag-after"><img src="'+g+'" alt="GCam '+n+'"></div>';
-    h+='<div class="gcc-m-drag-before"><img src="'+s+'" alt="Stock '+n+'"></div><div class="gcc-m-drag-line"></div>';
-    h+='<div class="gcc-m-drag-knob">'+SVG_DRAG+'</div><span class="gcc-tag gcc-tag-s" style="top:14px;left:14px">📷 Stock</span><span class="gcc-tag gcc-tag-g" style="top:14px;right:14px">📸 GCam</span></div>';
+    h+='<div class="gcc-m-drag" id="gccDrag">';
+    h+='<div class="gcc-m-drag-after"><img src="'+g+'" alt="GCam '+n+'"></div>';
+    h+='<div class="gcc-m-drag-before"><img src="'+s+'" alt="Stock '+n+'"></div>';
+    h+='<div class="gcc-m-drag-line"></div>';
+    h+='<div class="gcc-m-drag-knob">'+SVG_DRAG+'</div>';
+    h+='<span class="gcc-tag gcc-tag-s" style="top:14px;left:14px">📷 Stock</span>';
+    h+='<span class="gcc-tag gcc-tag-g" style="top:14px;right:14px">📸 GCam</span>';
+    h+='</div>';
   }
+
   mc.innerHTML=h;
   $('#gccMCnt').textContent=(mIdx+1)+' / '+TOTAL;
   $('#gccMCap').textContent=scenes[mIdx]+' — Sample '+n+' of '+TOTAL;
 }
 
+/* ═══════════════════════════════════════════════
+   SLIDESHOW NAV
+   ═══════════════════════════════════════════════ */
 function goSlide(idx){
   if(idx<0)idx=TOTAL-1;if(idx>=TOTAL)idx=0;
   $$('.gcc-slide',$('#gccShow'))[cur].classList.remove('active');
@@ -109,10 +198,16 @@ function loadNear(idx){
   for(var d=-2;d<=2;d++){
     var si=idx+d;if(si<0||si>=TOTAL)continue;
     var imgs=$$('.gcc-slide[data-i="'+si+'"] img[data-src]');
-    for(var j=0;j<imgs.length;j++){imgs[j].src=imgs[j].getAttribute('data-src');imgs[j].removeAttribute('data-src');}
+    for(var j=0;j<imgs.length;j++){
+      imgs[j].src=imgs[j].getAttribute('data-src');
+      imgs[j].removeAttribute('data-src');
+    }
   }
 }
 
+/* ═══════════════════════════════════════════════
+   MODAL OPEN / CLOSE / NAV
+   ═══════════════════════════════════════════════ */
 function openModal(idx){
   mIdx=idx;mOpen=true;
   renderModal();
@@ -139,36 +234,54 @@ function setMode(mode){
   renderModal();
 }
 
+/* ═══════════════════════════════════════════════
+   DRAG SLIDER
+   ═══════════════════════════════════════════════ */
 function initDrag(){
   document.addEventListener('pointerdown',function(e){
     var dc=e.target.closest('#gccDrag');if(!dc)return;
-    e.preventDefault();isDragging=true;dc.setPointerCapture(e.pointerId);
+    e.preventDefault();isDragging=true;
+    dc.setPointerCapture(e.pointerId);
     moveDrag(dc,e.clientX);
     function onMove(ev){moveDrag(dc,ev.clientX);}
     function onUp(){isDragging=false;dc.removeEventListener('pointermove',onMove);dc.removeEventListener('pointerup',onUp);dc.removeEventListener('pointercancel',onUp);}
-    dc.addEventListener('pointermove',onMove);dc.addEventListener('pointerup',onUp);dc.addEventListener('pointercancel',onUp);
+    dc.addEventListener('pointermove',onMove);
+    dc.addEventListener('pointerup',onUp);
+    dc.addEventListener('pointercancel',onUp);
   });
 }
 
 function moveDrag(dc,cx){
   var r=dc.getBoundingClientRect();
   var pct=Math.max(0,Math.min(100,((cx-r.left)/r.width)*100));
-  var bf=$('.gcc-m-drag-before',dc),ln=$('.gcc-m-drag-line',dc),kb=$('.gcc-m-drag-knob',dc);
+  var bf=$('.gcc-m-drag-before',dc);
+  var ln=$('.gcc-m-drag-line',dc);
+  var kb=$('.gcc-m-drag-knob',dc);
   if(bf)bf.style.clipPath='inset(0 '+(100-pct)+'% 0 0)';
   if(ln)ln.style.left=pct+'%';
   if(kb)kb.style.left=pct+'%';
 }
 
+/* ═══════════════════════════════════════════════
+   EVENTS
+   ═══════════════════════════════════════════════ */
 function initEvents(){
   $('#gccPrev').addEventListener('click',function(e){e.stopPropagation();goSlide(cur-1);});
   $('#gccNext').addEventListener('click',function(e){e.stopPropagation();goSlide(cur+1);});
+
   $('#gccVp').addEventListener('click',function(){openModal(cur);});
   $('#gccHint').addEventListener('click',function(){openModal(cur);});
+
   $('#gccMClose').addEventListener('click',closeModal);
   $('#gccMBg').addEventListener('click',closeModal);
+
   $('#gccMP').addEventListener('click',function(){goModal(mIdx-1);});
   $('#gccMN').addEventListener('click',function(){goModal(mIdx+1);});
-  $('#gccTog').addEventListener('click',function(e){var btn=e.target.closest('button');if(btn)setMode(btn.getAttribute('data-mode'));});
+
+  $('#gccTog').addEventListener('click',function(e){
+    var btn=e.target.closest('button');if(!btn)return;
+    setMode(btn.getAttribute('data-mode'));
+  });
 
   document.addEventListener('keydown',function(e){
     if(mOpen){
@@ -186,28 +299,55 @@ function initEvents(){
     }
   });
 
+  /* Touch swipe — main */
   var sx=0,vp=$('#gccVp');
   vp.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
-  vp.addEventListener('touchend',function(e){if(!sx)return;var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>45){dx<0?goSlide(cur+1):goSlide(cur-1);}sx=0;});
+  vp.addEventListener('touchend',function(e){
+    if(!sx)return;var dx=e.changedTouches[0].clientX-sx;
+    if(Math.abs(dx)>45){dx<0?goSlide(cur+1):goSlide(cur-1);}
+    sx=0;
+  });
 
+  /* Touch swipe — modal */
   var msx=0,mBody=$('#gccMBody');
-  mBody.addEventListener('touchstart',function(e){if(e.target.closest('.gcc-m-drag')){msx=0;return;}msx=e.touches[0].clientX;},{passive:true});
-  mBody.addEventListener('touchend',function(e){if(!msx||isDragging)return;var dx=e.changedTouches[0].clientX-msx;if(Math.abs(dx)>45){dx<0?goModal(mIdx+1):goModal(mIdx-1);}msx=0;},{passive:true});
+  mBody.addEventListener('touchstart',function(e){
+    if(e.target.closest('.gcc-m-drag')){msx=0;return;}
+    msx=e.touches[0].clientX;
+  },{passive:true});
+  mBody.addEventListener('touchend',function(e){
+    if(!msx||isDragging)return;
+    var dx=e.changedTouches[0].clientX-msx;
+    if(Math.abs(dx)>45){dx<0?goModal(mIdx+1):goModal(mIdx-1);}
+    msx=0;
+  },{passive:true});
 
-  $('#gccProgWrap').addEventListener('click',function(e){var r=this.getBoundingClientRect();goSlide(Math.round(((e.clientX-r.left)/r.width)*(TOTAL-1)));});
+  /* Progress bar seek */
+  $('#gccProgWrap').addEventListener('click',function(e){
+    var r=this.getBoundingClientRect();
+    var pct=(e.clientX-r.left)/r.width;
+    goSlide(Math.round(pct*(TOTAL-1)));
+  });
 }
 
+/* ═══════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════ */
 function init(){
   buildMain();
   buildModal();
   loadNear(0);
   initDrag();
   initEvents();
-  // Auto-open if the user clicked the skeleton slide before script loaded
-  if(window.gccNeedsAutoOpen) openModal(0);
+
+  // IMPORTANT: This handles the lazy-load fallback.
+  // If the user clicked the skeleton slide BEFORE this script downloaded,
+  // it automatically opens the full-screen mode the instant it loads.
+  if(window.gccNeedsAutoOpen) {
+    openModal(0);
+  }
 }
 
-// Execute immediately since the lazy loader only fetches this when needed
+// Execute immediately upon download
 init();
 
 })();
